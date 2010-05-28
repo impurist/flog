@@ -624,7 +624,21 @@ class TestFlog < MiniTest::Unit::TestCase
     @flog.add_to_score "blah", 2
     assert_equal 2.0, @flog.total
   end
-
+  
+  def test_raise_on_file_with_parser_error
+    #parse error on value nil (tNL). Some invalid ruby was causing this error 
+    # which was difficult to track down
+    require 'fileutils'
+    filename = "test/bad_ruby_file.rb"
+    File.open(filename, "w+") { |f| f.write "def bad_ruby_method??; return true; end" }
+    
+    assert_raises RuntimeError, "Error parsing ruby file #{filename}" do
+      @flog.flog(filename)
+    end
+    
+    FileUtils.rm(filename)
+  end
+  
   def util_process sexp, score = -1, hash = {}
     setup
     @flog.process sexp

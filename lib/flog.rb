@@ -235,9 +235,9 @@ class Flog < SexpProcessor
     files.each do |file|
       begin
         # TODO: replace File.open to deal with "-"
+        filename = file
         ruby = file == '-' ? $stdin.read : File.read(file)
         warn "** flogging #{file}" if option[:verbose]
-
         ast = @parser.process(ruby, file)
         next unless ast
         mass[file] = ast.mass
@@ -246,6 +246,8 @@ class Flog < SexpProcessor
         if e.inspect =~ /<%|%>/ or ruby =~ /<%|%>/ then
           warn "#{e.inspect} at #{e.backtrace.first(5).join(', ')}"
           warn "\n...stupid lemmings and their bad erb templates... skipping"
+        elsif e.inspect =~ /parse error on value/
+           raise "Error parsing ruby file #{filename}"
         else
           raise e unless option[:continue]
           warn file
